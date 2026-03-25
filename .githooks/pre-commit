@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+echo "Running pre-commit checks..."
+
+# Format check (non-destructive — reports only)
+if command -v swiftformat &> /dev/null; then
+    echo "  Checking formatting..."
+    if ! swiftformat --lint Sources/ Tests/ --config .swiftformat 2>/dev/null; then
+        echo "  ✗ Formatting issues found. Run 'make format' to fix."
+        exit 1
+    fi
+    echo "  ✓ Formatting OK"
+else
+    echo "  ⚠ swiftformat not installed. Run 'make setup' first."
+    exit 1
+fi
+
+# SwiftLint check
+if command -v mint &> /dev/null; then
+    echo "  Checking lint rules..."
+    if ! mint run swiftlint lint --strict --quiet 2>/dev/null; then
+        echo "  ✗ Lint violations found. Run 'make lint' to see details."
+        exit 1
+    fi
+    echo "  ✓ Lint OK"
+fi
+
+# Build check
+echo "  Building..."
+if ! swift build -c debug 2>/dev/null; then
+    echo "  ✗ Build failed."
+    exit 1
+fi
+echo "  ✓ Build OK"
+
+echo "All pre-commit checks passed."

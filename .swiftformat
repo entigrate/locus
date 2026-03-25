@@ -1,0 +1,13 @@
+--indent 4
+--indentcase false
+--trimwhitespace always
+--voidtype void
+--wraparguments before-first
+--wrapcollections before-first
+--maxwidth 150
+--self remove
+--stripunusedargs closure-only
+--header strip
+--disable elseOnSameLine
+--swiftversion 5.9
+--exclude .build

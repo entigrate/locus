@@ -1,0 +1,54 @@
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+
+opt_in_rules:
+  - force_unwrapping
+  - implicit_return
+  - empty_count
+  - closure_spacing
+  - contains_over_filter_count
+  - discouraged_optional_boolean
+  - empty_string
+  - fallthrough
+  - fatal_error_message
+  - first_where
+  - last_where
+  - modifier_order
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+  - yoda_condition
+
+disabled_rules:
+  - trailing_comma
+  - todo
+
+line_length:
+  warning: 150
+  error: 200
+
+type_body_length:
+  warning: 300
+  error: 500
+
+file_length:
+  warning: 400
+  error: 600
+
+function_body_length:
+  warning: 50
+  error: 100
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+nesting:
+  type_level: 2
+  function_level: 3

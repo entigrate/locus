@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# SPM build artifacts
+.build/
+Package.resolved
+
+# App bundle (built artifact)
+Glimpse.app/
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+
+# Debug symbols
+*.dSYM.zip
+*.dSYM
+
+# SwiftPM user settings
+.swiftpm/xcode/xcuserdata/
+
+# Mint
+.mint/
