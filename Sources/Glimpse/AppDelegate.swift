@@ -25,7 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Self.performCapture()
         }
 
-        if AXIsProcessTrusted() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        if AXIsProcessTrustedWithOptions(options) {
             #if DEBUG
                 print("[Glimpse] Accessibility permission: true")
             #endif
