@@ -1,4 +1,4 @@
-.PHONY: build run format lint check test clean setup
+.PHONY: build run release format lint check test clean setup
 
 # Build the app bundle
 build:
@@ -11,6 +11,10 @@ build-reset:
 # Run the app
 run: build
 	open Locus.app
+
+# Signed, notarized release DMG
+release:
+	./Scripts/build.sh --release
 
 # Auto-format all Swift files
 format:
