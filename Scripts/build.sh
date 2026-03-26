@@ -63,6 +63,21 @@ if $RELEASE; then
     DMG_PATH="$PROJECT_DIR/$DMG_NAME"
 
     echo "Signing with Developer ID..."
+    # Sign Sparkle framework binaries first (deep inside out)
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
+        SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+        find "$SPARKLE_FW" -name "*.xpc" -type d | while read -r xpc; do
+            codesign --force --options runtime --sign "$DEVELOPER_ID" "$xpc"
+        done
+        for bin in "$SPARKLE_FW/Versions/B/Autoupdate" \
+                   "$SPARKLE_FW/Versions/B/Updater.app"; do
+            if [ -e "$bin" ]; then
+                codesign --force --options runtime --sign "$DEVELOPER_ID" "$bin"
+            fi
+        done
+        codesign --force --options runtime --sign "$DEVELOPER_ID" "$SPARKLE_FW"
+    fi
+    # Sign the main app bundle
     codesign --force --options runtime \
         --sign "$DEVELOPER_ID" \
         --entitlements "$ENTITLEMENTS" \
