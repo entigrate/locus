@@ -19,6 +19,9 @@ xcuserdata/
 # SwiftPM user settings
 .swiftpm/xcode/xcuserdata/
 
+# Claude Code local settings
+.claude/
+
 # Mint
 .mint/
 
