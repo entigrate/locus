@@ -100,9 +100,58 @@ if $RELEASE; then
     echo "Stapling notarization ticket..."
     xcrun stapler staple "$DMG_PATH"
 
+    # --- Sign for Sparkle auto-updates ---
+    echo "Signing for Sparkle..."
+    SIGN_TOOL="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin/sign_update"
+    SPARKLE_SIG=$("$SIGN_TOOL" "$DMG_PATH" | grep 'sparkle:edSignature' | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+    FILE_SIZE=$(stat -f%z "$DMG_PATH")
+    DOWNLOAD_URL="https://github.com/entigrate/locus/releases/download/v${VERSION}/${DMG_NAME}"
+    PUB_DATE=$(date -R)
+
+    echo "Updating appcast..."
+    APPCAST="$PROJECT_DIR/docs/appcast.xml"
+    cat > "$APPCAST" << XMLEOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Locus</title>
+    <link>https://locusapp.dev/appcast.xml</link>
+    <description>Locus update feed</description>
+    <language>en</language>
+    <item>
+      <title>Version ${VERSION}</title>
+      <pubDate>${PUB_DATE}</pubDate>
+      <sparkle:version>${VERSION}</sparkle:version>
+      <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="${DOWNLOAD_URL}"
+        length="${FILE_SIZE}"
+        type="application/octet-stream"
+        sparkle:edSignature="${SPARKLE_SIG}"
+      />
+    </item>
+  </channel>
+</rss>
+XMLEOF
+
+    # --- Publish ---
+    echo "Publishing to GitHub..."
+    git add "$APPCAST"
+    git commit -m "Update appcast for v${VERSION}"
+    git push
+
+    unset GITHUB_TOKEN
+    gh release create "v${VERSION}" "$DMG_PATH" \
+        --repo entigrate/locus \
+        --title "Locus v${VERSION}" \
+        --generate-notes
+
     echo ""
-    echo "Release build complete: $DMG_PATH"
-    echo "Ready to upload to GitHub Releases."
+    echo "Release v${VERSION} published!"
+    echo "  DMG: $DMG_PATH"
+    echo "  Release: https://github.com/entigrate/locus/releases/tag/v${VERSION}"
+    echo "  Appcast: https://locusapp.dev/appcast.xml"
 else
     # --- Dev build: ad-hoc signing ---
     echo "Signing app bundle (ad-hoc)..."
