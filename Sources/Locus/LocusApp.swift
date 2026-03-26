@@ -1,12 +1,14 @@
+import Sparkle
 import SwiftUI
 
 @main
 struct LocusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    private let updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     var body: some Scene {
         MenuBarExtra("Locus", systemImage: "camera.viewfinder") {
-            MenuContent(appDelegate: appDelegate)
+            MenuContent(appDelegate: appDelegate, checkForUpdates: updaterController.updater.checkForUpdates)
         }
         .menuBarExtraStyle(.menu)
 
@@ -20,6 +22,7 @@ struct LocusApp: App {
 
 struct MenuContent: View {
     let appDelegate: AppDelegate
+    let checkForUpdates: () -> Void
     @ObservedObject private var store = SettingsStore.shared
     @Environment(\.openWindow) private var openWindow
     @State private var hotkeyReady = false
@@ -47,6 +50,10 @@ struct MenuContent: View {
 
             Button("History  \(store.openHistory.displayString)") {
                 AppDelegate.openHistoryWindow()
+            }
+
+            Button("Check for Updates\u{2026}") {
+                checkForUpdates()
             }
 
             Button("Settings\u{2026}") {
