@@ -6,7 +6,7 @@
 Package.resolved
 
 # App bundle (built artifact)
-Glimpse.app/
+Locus.app/
 
 # Xcode
 xcuserdata/
@@ -21,3 +21,6 @@ xcuserdata/
 
 # Mint
 .mint/
+
+# Private roadmap
+PLAN.md

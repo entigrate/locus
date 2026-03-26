@@ -10,7 +10,7 @@ build-reset:
 
 # Run the app
 run: build
-	open Glimpse.app
+	open Locus.app
 
 # Auto-format all Swift files
 format:
@@ -35,7 +35,7 @@ test:
 # Clean build artifacts
 clean:
 	swift package clean
-	rm -rf Glimpse.app
+	rm -rf Locus.app
 
 # First-time setup: install tools and configure git hooks
 setup:

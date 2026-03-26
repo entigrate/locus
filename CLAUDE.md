@@ -1,11 +1,11 @@
-# Glimpse
+# Locus
 
-A macOS menu bar app that captures the window under your cursor with a hotkey (Cmd+Shift+G) and copies it to clipboard.
+A macOS menu bar app that captures the window under your cursor with a hotkey (Cmd+Shift+W) and copies it to clipboard.
 
 ## Build & Run
 
 ```bash
-make build          # Build Glimpse.app (with ad-hoc code signing)
+make build          # Build Locus.app (with ad-hoc code signing)
 make run            # Build and open
 make build-reset    # Build with permission reset
 make check          # Format + build (all quality gates)
@@ -27,14 +27,16 @@ make setup          # First-time: install tools, configure git hooks
 ## Source Layout
 
 ```
-Sources/Glimpse/
-  GlimpseApp.swift      — @main entry, MenuBarExtra UI
+Sources/Locus/
+  LocusApp.swift        — @main entry, MenuBarExtra UI
   AppDelegate.swift     — Permissions, hotkey wiring, capture pipeline
-  HotkeyManager.swift   — CGEventTap global hotkey (Cmd+Shift+G)
+  HotkeyManager.swift   — CGEventTap global hotkeys (configurable)
+  HotkeyStore.swift     — Hotkey binding model + UserDefaults persistence
   WindowDetector.swift  — Window enumeration & cursor hit-testing
   ScreenCapture.swift   — ScreenCaptureKit → clipboard (TIFF)
   Feedback.swift        — Sound + screen flash on capture
-Tests/GlimpseTests/     — XCTest (requires Xcode to run)
+  SettingsView.swift    — Settings window with shortcut recorder
+Tests/LocusTests/       — XCTest (requires Xcode to run)
 Scripts/build.sh        — Compile + .app bundle + ad-hoc signing
 ```
 

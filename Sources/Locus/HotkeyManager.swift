@@ -3,13 +3,12 @@ import AppKit
 final class HotkeyManager {
     static let shared = HotkeyManager()
 
-    private let hotkeyCode: CGKeyCode = 5 // G key
-    private let hotkeyModifiers: CGEventFlags = [.maskCommand, .maskShift]
-
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
-    var onHotkey: (() -> Void)?
+    var onCaptureWindow: (() -> Void)?
+    var onCaptureFullScreen: (() -> Void)?
+    var isRecordingShortcut = false
 
     private init() {}
 
@@ -30,7 +29,7 @@ final class HotkeyManager {
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
             #if DEBUG
-                print("[Glimpse] Failed to create event tap — Accessibility permission may be missing")
+                print("[Locus] Failed to create event tap — Accessibility permission may be missing")
             #endif
             return
         }
@@ -40,7 +39,7 @@ final class HotkeyManager {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
         #if DEBUG
-            print("[Glimpse] Event tap registered")
+            print("[Locus] Event tap registered")
         #endif
     }
 
@@ -56,13 +55,21 @@ final class HotkeyManager {
     }
 
     private func handleEvent(_ event: CGEvent) -> Unmanaged<CGEvent>? {
-        let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-        let flags = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
+        if isRecordingShortcut {
+            return Unmanaged.passUnretained(event)
+        }
 
-        if keyCode == hotkeyCode, flags == hotkeyModifiers {
-            DispatchQueue.main.async { [self] in
-                onHotkey?()
-            }
+        let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+        let flags = event.flags
+
+        let store = SettingsStore.shared
+        if store.captureWindow.matches(keyCode: keyCode, flags: flags) {
+            DispatchQueue.main.async { [self] in onCaptureWindow?() }
+            return nil
+        }
+
+        if store.captureFullScreen.matches(keyCode: keyCode, flags: flags) {
+            DispatchQueue.main.async { [self] in onCaptureFullScreen?() }
             return nil
         }
 

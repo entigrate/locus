@@ -1,4 +1,4 @@
-@testable import Glimpse
+@testable import Locus
 import XCTest
 
 final class WindowDetectorTests: XCTestCase {

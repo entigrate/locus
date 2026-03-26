@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "Glimpse",
+    name: "Locus",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "Glimpse",
-            path: "Sources/Glimpse"
+            name: "Locus",
+            path: "Sources/Locus"
         ),
         .testTarget(
-            name: "GlimpseTests",
-            dependencies: ["Glimpse"],
-            path: "Tests/GlimpseTests"
+            name: "LocusTests",
+            dependencies: ["Locus"],
+            path: "Tests/LocusTests"
         ),
     ]
 )

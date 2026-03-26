@@ -4,12 +4,33 @@ enum Feedback {
     private static var activeFlashWindow: NSWindow?
 
     static func captureSuccess(windowBounds: CGRect) {
-        NSSound(named: "Glass")?.play()
+        playSound()
         flashWindow(at: windowBounds)
     }
 
+    static func fullScreenCaptureSuccess() {
+        playSound()
+        guard let screen = NSScreen.screens.first else { return }
+        flashWindow(at: CGRect(
+            x: screen.frame.origin.x,
+            y: 0,
+            width: screen.frame.width,
+            height: screen.frame.height
+        ))
+    }
+
     static func captureFailure() {
-        NSSound(named: "Basso")?.play()
+        let store = SettingsStore.shared
+        guard store.soundEnabled, let sound = NSSound(named: "Basso") else { return }
+        sound.volume = store.soundVolume
+        sound.play()
+    }
+
+    private static func playSound() {
+        let store = SettingsStore.shared
+        guard store.soundEnabled, let sound = NSSound(named: NSSound.Name(store.soundName)) else { return }
+        sound.volume = store.soundVolume
+        sound.play()
     }
 
     private static func flashWindow(at bounds: CGRect) {

@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-APP_NAME="Glimpse"
+APP_NAME="Locus"
 APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
-BUNDLE_ID="com.glimpse.app"
+BUNDLE_ID="com.locus.app"
 RESET_PERMISSIONS=false
 
 for arg in "$@"; do
@@ -42,4 +42,4 @@ echo "To run:"
 echo "  open $APP_BUNDLE"
 echo ""
 echo "First launch will prompt for Screen Recording and Accessibility permissions."
-echo "Hotkey: Cmd+Shift+G to capture the window under your cursor."
+echo "Hotkey: Cmd+Shift+W to capture the window under your cursor."
