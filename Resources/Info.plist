@@ -10,6 +10,12 @@
     <string>0.1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>0.1.0</string>
+    <key>SUPublicEDKey</key>
+    <string>QG4rH9JYNiDce5KSdF18SKVW02EDiMdXzcgHeGHXRYs=</string>
+    <key>SUFeedURL</key>
+    <string>https://locusapp.dev/appcast.xml</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleExecutable</key>

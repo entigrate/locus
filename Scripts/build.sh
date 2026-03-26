@@ -40,6 +40,13 @@ cp ".build/release/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 cp "Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 cp "Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
+# Bundle Sparkle framework
+SPARKLE_PATH=$(find .build -path "*/Sparkle.framework" -maxdepth 5 -type d | head -1)
+if [ -n "$SPARKLE_PATH" ]; then
+    mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+    cp -R "$SPARKLE_PATH" "$APP_BUNDLE/Contents/Frameworks/"
+fi
+
 if $RELEASE; then
     # --- Release build: Developer ID signing + notarization + DMG ---
 
