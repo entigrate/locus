@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          brew install swiftformat mint
+          mint install realm/SwiftLint
+
+      - name: Format check
+        run: swiftformat --lint Sources/ Tests/ --config .swiftformat
+
+      - name: Lint
+        run: mint run swiftlint lint --strict
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
