@@ -1,6 +1,8 @@
 # Locus
 
-A macOS menu bar app that captures the window under your cursor with one hotkey and copies it to your clipboard. No click, no drag, no file to find — just hotkey and paste.
+A macOS menu bar app that captures the window under your cursor with one hotkey and copies it to your clipboard. Paste into Claude, ChatGPT, Slack, or anywhere else. No click, no drag, no file to find.
+
+**[locusapp.dev](https://locusapp.dev)**
 
 ## The Problem
 
@@ -36,8 +38,6 @@ Download the latest DMG from the [Releases](https://github.com/entigrate/locus/r
 ```bash
 brew install entigrate/tap/locus
 ```
-
-> Homebrew and signed releases are coming soon. For now, build from source.
 
 ### Build from Source
 
