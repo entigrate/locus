@@ -26,6 +26,10 @@ enum Feedback {
         sound.play()
     }
 
+    static func playSuccessSound() {
+        playSound()
+    }
+
     private static func playSound() {
         let store = SettingsStore.shared
         guard store.soundEnabled, let sound = NSSound(named: NSSound.Name(store.soundName)) else { return }

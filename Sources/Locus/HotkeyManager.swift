@@ -8,6 +8,7 @@ final class HotkeyManager {
 
     var onCaptureWindow: (() -> Void)?
     var onCaptureFullScreen: (() -> Void)?
+    var onOpenHistory: (() -> Void)?
     var isRecordingShortcut = false
 
     private init() {}
@@ -70,6 +71,11 @@ final class HotkeyManager {
 
         if store.captureFullScreen.matches(keyCode: keyCode, flags: flags) {
             DispatchQueue.main.async { [self] in onCaptureFullScreen?() }
+            return nil
+        }
+
+        if store.openHistory.matches(keyCode: keyCode, flags: flags) {
+            DispatchQueue.main.async { [self] in onOpenHistory?() }
             return nil
         }
 

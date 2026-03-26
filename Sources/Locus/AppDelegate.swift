@@ -1,5 +1,6 @@
 import AppKit
 import ScreenCaptureKit
+import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var accessibilityTimer: Timer?
@@ -34,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HotkeyManager.shared.onCaptureFullScreen = {
             Self.performFullScreenCapture()
         }
+        HotkeyManager.shared.onOpenHistory = {
+            Self.openHistoryWindow()
+        }
 
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
         if AXIsProcessTrustedWithOptions(options) {
@@ -64,6 +68,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - History Window
+
+    private static var historyWindow: NSWindow?
+
+    static func openHistoryWindow() {
+        if let existing = historyWindow, existing.isVisible {
+            NSApp.activate()
+            existing.makeKeyAndOrderFront(nil)
+            existing.orderFrontRegardless()
+            return
+        }
+        let controller = NSHostingController(rootView: HistoryView())
+        let window = NSWindow(contentViewController: controller)
+        window.title = "Capture History"
+        window.setContentSize(NSSize(width: 620, height: 500))
+        window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
+        window.center()
+        historyWindow = window
+        NSApp.activate()
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+    }
+
     // MARK: - Capture Actions
 
     static func performWindowCapture() {
@@ -80,8 +107,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         #endif
 
         Task {
-            if await ScreenCapture.captureWindowToClipboard(windowID: window.windowID) {
-                await MainActor.run { Feedback.captureSuccess(windowBounds: window.bounds) }
+            if let pngData = await ScreenCapture.captureWindowToClipboard(windowID: window.windowID) {
+                await MainActor.run {
+                    Feedback.captureSuccess(windowBounds: window.bounds)
+                    HistoryStore.shared.save(pngData: pngData, appName: window.ownerName, windowTitle: window.windowName)
+                }
             } else {
                 #if DEBUG
                     print("[Locus] Window capture failed")
@@ -97,8 +127,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         #endif
 
         Task {
-            if await ScreenCapture.captureFullScreenToClipboard() {
-                await MainActor.run { Feedback.fullScreenCaptureSuccess() }
+            if let pngData = await ScreenCapture.captureFullScreenToClipboard() {
+                await MainActor.run {
+                    Feedback.fullScreenCaptureSuccess()
+                    HistoryStore.shared.save(pngData: pngData, appName: nil, windowTitle: "Full Screen")
+                }
             } else {
                 #if DEBUG
                     print("[Locus] Full screen capture failed")

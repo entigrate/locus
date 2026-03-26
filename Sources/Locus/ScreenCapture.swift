@@ -2,11 +2,11 @@ import AppKit
 import ScreenCaptureKit
 
 enum ScreenCapture {
-    static func captureWindowToClipboard(windowID: CGWindowID) async -> Bool {
+    static func captureWindowToClipboard(windowID: CGWindowID) async -> Data? {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
             guard let scWindow = content.windows.first(where: { $0.windowID == windowID }) else {
-                return false
+                return nil
             }
 
             let filter = SCContentFilter(desktopIndependentWindow: scWindow)
@@ -20,14 +20,14 @@ enum ScreenCapture {
             #if DEBUG
                 print("[Locus] Window capture error: \(error)")
             #endif
-            return false
+            return nil
         }
     }
 
-    static func captureFullScreenToClipboard() async -> Bool {
+    static func captureFullScreenToClipboard() async -> Data? {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-            guard let display = content.displays.first else { return false }
+            guard let display = content.displays.first else { return nil }
 
             let filter = SCContentFilter(display: display, excludingWindows: [])
             let config = SCStreamConfiguration()
@@ -40,21 +40,22 @@ enum ScreenCapture {
             #if DEBUG
                 print("[Locus] Full screen capture error: \(error)")
             #endif
-            return false
+            return nil
         }
     }
 
-    private static func captureAndCopy(filter: SCContentFilter, configuration: SCStreamConfiguration) async throws -> Bool {
+    private static func captureAndCopy(filter: SCContentFilter, configuration: SCStreamConfiguration) async throws -> Data? {
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
 
-        let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        guard let tiffData = nsImage.tiffRepresentation else { return false }
+        let bitmap = NSBitmapImageRep(cgImage: image)
+        guard let pngData = bitmap.representation(using: .png, properties: [:])
+        else { return nil }
 
         await MainActor.run {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
-            pasteboard.setData(tiffData, forType: .tiff)
+            pasteboard.setData(pngData, forType: .png)
         }
-        return true
+        return pngData
     }
 }

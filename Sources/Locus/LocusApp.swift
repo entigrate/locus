@@ -45,6 +45,10 @@ struct MenuContent: View {
 
             Divider()
 
+            Button("History  \(store.openHistory.displayString)") {
+                AppDelegate.openHistoryWindow()
+            }
+
             Button("Settings\u{2026}") {
                 openWindow(id: "settings")
                 NSApp.activate()

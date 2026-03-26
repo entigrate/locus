@@ -9,9 +9,11 @@ struct SettingsView: View {
                 .font(.headline)
                 .padding(.bottom, 16)
 
-            ShortcutRow(label: "Capture Window", binding: $store.captureWindow, conflictsWith: store.captureFullScreen)
+            ShortcutRow(label: "Capture Window", binding: $store.captureWindow, conflictsWith: [store.captureFullScreen, store.openHistory])
             Divider().padding(.vertical, 8)
-            ShortcutRow(label: "Capture Full Screen", binding: $store.captureFullScreen, conflictsWith: store.captureWindow)
+            ShortcutRow(label: "Capture Full Screen", binding: $store.captureFullScreen, conflictsWith: [store.captureWindow, store.openHistory])
+            Divider().padding(.vertical, 8)
+            ShortcutRow(label: "Open History", binding: $store.openHistory, conflictsWith: [store.captureWindow, store.captureFullScreen])
 
             Spacer().frame(height: 24)
 
@@ -31,6 +33,14 @@ struct SettingsView: View {
 
             Spacer().frame(height: 24)
 
+            Text("History")
+                .font(.headline)
+                .padding(.bottom, 16)
+
+            HistorySettingsSection()
+
+            Spacer().frame(height: 24)
+
             HStack {
                 Spacer()
                 Button("Reset to Defaults") {
@@ -39,14 +49,14 @@ struct SettingsView: View {
             }
         }
         .padding(24)
-        .frame(width: 380, height: 380)
+        .frame(width: 380, height: 540)
     }
 }
 
 private struct ShortcutRow: View {
     let label: String
     @Binding var binding: HotkeyBinding
-    let conflictsWith: HotkeyBinding
+    let conflictsWith: [HotkeyBinding]
 
     var body: some View {
         HStack {
@@ -59,7 +69,7 @@ private struct ShortcutRow: View {
 
 private struct ShortcutRecorder: View {
     @Binding var binding: HotkeyBinding
-    let conflictsWith: HotkeyBinding
+    let conflictsWith: [HotkeyBinding]
     @State private var isRecording = false
     @State private var showConflict = false
     @State private var monitor: Any?
@@ -109,7 +119,7 @@ private struct ShortcutRecorder: View {
                         modifierFlags: UInt64(mods.rawValue),
                         displayKey: key
                     )
-                    if candidate == conflictsWith {
+                    if conflictsWith.contains(candidate) {
                         showConflict = true
                         stopRecording()
                         return nil
@@ -186,6 +196,81 @@ private struct SoundPicker: View {
         guard !name.isEmpty, let sound = NSSound(named: NSSound.Name(name)) else { return }
         sound.volume = volume
         sound.play()
+    }
+}
+
+private struct HistorySettingsSection: View {
+    @ObservedObject private var store = SettingsStore.shared
+    @ObservedObject private var historyStore = HistoryStore.shared
+    @State private var limitText: String = ""
+    @State private var showClearConfirmation = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Max captures")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                TextField("unlimited", text: $limitText)
+                    .frame(width: 80)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.center)
+                    .onSubmit { applyLimit() }
+                    .onChange(of: store.historyLimit) { _, _ in syncLimitText() }
+            }
+
+            HStack {
+                Text("0 = disabled, blank = unlimited")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+
+            HStack {
+                Text(diskUsageText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Button("Clear History") {
+                    showClearConfirmation = true
+                }
+                .disabled(historyStore.entries.isEmpty)
+                .confirmationDialog(
+                    "Clear all capture history?",
+                    isPresented: $showClearConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Clear All", role: .destructive) {
+                        historyStore.clearAll()
+                    }
+                }
+            }
+        }
+        .onAppear { syncLimitText() }
+    }
+
+    private var diskUsageText: String {
+        let size = ByteCountFormatter.string(fromByteCount: historyStore.totalDiskUsage, countStyle: .file)
+        return "\(historyStore.entries.count) captures \u{2014} \(size)"
+    }
+
+    private func syncLimitText() {
+        if let limit = store.historyLimit {
+            limitText = "\(limit)"
+        } else {
+            limitText = ""
+        }
+    }
+
+    private func applyLimit() {
+        let trimmed = limitText.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            store.historyLimit = nil
+        } else if let value = Int(trimmed), value >= 0 {
+            store.historyLimit = value
+            HistoryStore.shared.enforceLimit()
+        } else {
+            syncLimitText()
+        }
     }
 }
 
