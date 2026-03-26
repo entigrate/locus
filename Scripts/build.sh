@@ -151,6 +151,39 @@ if $RELEASE; then
 </rss>
 XMLEOF
 
+    # --- Update Homebrew cask ---
+    echo "Updating Homebrew cask..."
+    DMG_SHA256=$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')
+    TAP_DIR="/tmp/homebrew-tap-release"
+    rm -rf "$TAP_DIR"
+    git clone git@github.com:entigrate/homebrew-tap.git "$TAP_DIR"
+    cat > "$TAP_DIR/Casks/locus.rb" << CASKEOF
+cask "locus" do
+  version "${VERSION}"
+  sha256 "${DMG_SHA256}"
+
+  url "https://github.com/entigrate/locus/releases/download/v#{version}/Locus-#{version}.dmg"
+  name "Locus"
+  desc "Capture the window under your cursor with one hotkey"
+  homepage "https://locusapp.dev"
+
+  depends_on macos: ">= :sonoma"
+
+  app "Locus.app"
+
+  zap trash: [
+    "~/Library/Caches/com.locus.app",
+    "~/Library/Preferences/com.locus.app.plist",
+  ]
+end
+CASKEOF
+    cd "$TAP_DIR"
+    git add Casks/locus.rb
+    git commit -m "Update Locus to v${VERSION}"
+    git push
+    cd "$PROJECT_DIR"
+    rm -rf "$TAP_DIR"
+
     # --- Publish ---
     echo "Publishing to GitHub..."
     git add "$APPCAST"
@@ -168,6 +201,7 @@ XMLEOF
     echo "  DMG: $DMG_PATH"
     echo "  Release: https://github.com/entigrate/locus/releases/tag/v${VERSION}"
     echo "  Appcast: https://locusapp.dev/appcast.xml"
+    echo "  Homebrew: brew install entigrate/tap/locus"
 else
     # --- Dev build: ad-hoc signing ---
     echo "Signing app bundle (ad-hoc)..."
