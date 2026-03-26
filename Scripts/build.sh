@@ -67,10 +67,17 @@ if $RELEASE; then
 
     echo "Creating DMG..."
     rm -f "$DMG_PATH"
-    hdiutil create -volname "$APP_NAME" \
-        -srcfolder "$APP_BUNDLE" \
-        -ov -format UDZO \
-        "$DMG_PATH"
+    create-dmg \
+        --volname "$APP_NAME" \
+        --background "$PROJECT_DIR/Resources/dmg-background.png" \
+        --window-pos 200 120 \
+        --window-size 540 300 \
+        --icon-size 80 \
+        --icon "$APP_NAME.app" 140 150 \
+        --app-drop-link 400 150 \
+        --no-internet-enable \
+        "$DMG_PATH" \
+        "$APP_BUNDLE"
 
     echo "Signing DMG..."
     codesign --force --sign "$DEVELOPER_ID" "$DMG_PATH"
