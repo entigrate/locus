@@ -13,6 +13,7 @@ make format         # Auto-format Swift files
 make lint           # Check formatting without modifying files
 make test           # Run tests (requires Xcode)
 make setup          # First-time: install tools, configure git hooks
+make release        # Full release: build, sign, notarize, DMG, appcast, GitHub release
 ```
 
 ## Architecture
