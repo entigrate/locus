@@ -30,14 +30,15 @@ make setup          # First-time: install tools, configure git hooks
 Sources/Locus/
   LocusApp.swift        — @main entry, MenuBarExtra UI
   AppDelegate.swift     — Permissions, hotkey wiring, capture pipeline
-  HotkeyManager.swift   — CGEventTap global hotkeys (configurable)
-  HotkeyStore.swift     — Hotkey binding model + UserDefaults persistence
-  WindowDetector.swift  — Window enumeration & cursor hit-testing
-  ScreenCapture.swift   — ScreenCaptureKit → clipboard (TIFF)
-  Feedback.swift        — Sound + screen flash on capture
-  SettingsView.swift    — Settings window with shortcut recorder
-Tests/LocusTests/       — XCTest (requires Xcode to run)
-Scripts/build.sh        — Compile + .app bundle + ad-hoc signing
+  HotkeyBinding.swift   — Hotkey binding model (keyCode, modifiers, display)
+  HotkeyManager.swift   — CGEventTap global hotkey dispatch
+  SettingsStore.swift    — App settings (bindings, sound, launch at login)
+  SettingsView.swift     — Settings window UI
+  WindowDetector.swift   — Window enumeration & cursor hit-testing
+  ScreenCapture.swift    — ScreenCaptureKit → clipboard
+  Feedback.swift         — Configurable sound + screen flash on capture
+Tests/LocusTests/        — XCTest (requires Xcode to run)
+Scripts/build.sh         — Compile + .app bundle + ad-hoc signing
 ```
 
 ## Conventions
@@ -47,7 +48,7 @@ Scripts/build.sh        — Compile + .app bundle + ad-hoc signing
 - Use `NSScreen.screens.first` (primary screen) for coordinate conversion, not `NSScreen.main`
 - All enums used as namespaces (no cases) should be declared as `enum`, not `struct`
 - Permissions: poll for grant status and auto-recover — never require manual restart
-- Sound names: "Glass" for success, "Basso" for failure
+- Sound: configurable via Settings (default "Glass" for success, "Basso" for failure)
 - Run `make format` before committing to ensure consistent style
 
 ## Quality Gates
