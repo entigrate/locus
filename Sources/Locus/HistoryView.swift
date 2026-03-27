@@ -132,8 +132,8 @@ private struct HistoryDetailView: View {
                 VStack(spacing: 16) {
                     imageView
                         .frame(
-                            maxWidth: geo.size.width * 0.75,
-                            maxHeight: geo.size.height * 0.65
+                            maxWidth: geo.size.width - 120,
+                            maxHeight: geo.size.height - 120
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .shadow(radius: 20)

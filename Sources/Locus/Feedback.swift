@@ -10,7 +10,9 @@ enum Feedback {
 
     static func fullScreenCaptureSuccess() {
         playSound()
-        guard let screen = NSScreen.screens.first else { return }
+        let mouseLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) ?? NSScreen.screens.first
+        guard let screen else { return }
         flashWindow(at: CGRect(
             x: screen.frame.origin.x,
             y: 0,
