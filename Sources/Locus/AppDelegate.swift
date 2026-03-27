@@ -73,10 +73,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static var historyWindow: NSWindow?
 
     static func openHistoryWindow() {
+        NSApp.activate()
         if let existing = historyWindow, existing.isVisible {
-            NSApp.activate()
             existing.makeKeyAndOrderFront(nil)
-            existing.orderFrontRegardless()
             return
         }
         let controller = NSHostingController(rootView: HistoryView())
@@ -86,9 +85,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
         window.center()
         historyWindow = window
-        NSApp.activate()
         window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
     }
 
     // MARK: - Capture Actions
