@@ -82,7 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = NSHostingController(rootView: HistoryView())
         let window = NSWindow(contentViewController: controller)
         window.title = "Capture History"
-        window.setContentSize(NSSize(width: 620, height: 500))
+        window.setContentSize(NSSize(width: 900, height: 600))
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
         window.center()
         historyWindow = window
