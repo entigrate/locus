@@ -112,6 +112,7 @@ final class HistoryStoreTests: XCTestCase {
         SettingsStore.shared.historyLimit = 100
         for idx in 0 ..< 5 {
             store.save(pngData: samplePNG, appName: "App\(idx)", windowTitle: nil)
+            Thread.sleep(forTimeInterval: 0.01)
         }
         let allFilenames = store.entries.map(\.filename)
 
