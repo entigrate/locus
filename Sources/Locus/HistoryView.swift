@@ -29,10 +29,13 @@ struct HistoryView: View {
                 toolbar
             }
 
-            if let entry = selectedEntry {
-                HistoryDetailView(entry: entry) {
-                    selectedEntry = nil
-                }
+            if let entry = selectedEntry, let index = store.entries.firstIndex(where: { $0.id == entry.id }) {
+                HistoryDetailView(
+                    entries: store.entries,
+                    currentIndex: index,
+                    onSelect: { selectedEntry = store.entries[$0] },
+                    onDismiss: { selectedEntry = nil }
+                )
             }
         }
         .frame(minWidth: 520, minHeight: 400)
@@ -87,54 +90,100 @@ struct HistoryView: View {
 // MARK: - Detail View
 
 private struct HistoryDetailView: View {
-    let entry: HistoryEntry
+    let entries: [HistoryEntry]
+    let currentIndex: Int
+    let onSelect: (Int) -> Void
     let onDismiss: () -> Void
     @State private var fullImage: NSImage?
 
+    private var entry: HistoryEntry {
+        entries[currentIndex]
+    }
+
+    private var hasPrevious: Bool {
+        currentIndex > 0
+    }
+
+    private var hasNext: Bool {
+        currentIndex < entries.count - 1
+    }
+
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-                .onTapGesture { onDismiss() }
+        GeometryReader { geo in
+            ZStack {
+                Color.black.opacity(0.6)
+                    .ignoresSafeArea()
+                    .onTapGesture { onDismiss() }
 
-            VStack(spacing: 16) {
-                imageView
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .shadow(radius: 20)
-
-                HStack(spacing: 8) {
-                    Text(entry.appName ?? entry.windowTitle ?? "Capture")
-                        .fontWeight(.medium)
-                    Text("\u{2014}")
-                        .foregroundColor(.secondary)
-                    Text(timeAgo(entry.timestamp))
-                        .foregroundColor(.secondary)
+                // Previous arrow
+                if hasPrevious {
+                    navButton(systemImage: "chevron.left") { onSelect(currentIndex - 1) }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                        .padding(.leading, 12)
                 }
-                .font(.caption)
 
-                HStack(spacing: 12) {
-                    Button {
-                        if HistoryStore.shared.copyToClipboard(entry: entry) {
-                            Feedback.playSuccessSound()
+                // Next arrow
+                if hasNext {
+                    navButton(systemImage: "chevron.right") { onSelect(currentIndex + 1) }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                        .padding(.trailing, 12)
+                }
+
+                VStack(spacing: 16) {
+                    imageView
+                        .frame(
+                            maxWidth: geo.size.width * 0.75,
+                            maxHeight: geo.size.height * 0.65
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .shadow(radius: 20)
+
+                    HStack(spacing: 8) {
+                        Text(entry.appName ?? entry.windowTitle ?? "Capture")
+                            .fontWeight(.medium)
+                        Text("\u{2014}")
+                            .foregroundColor(.secondary)
+                        Text(timeAgo(entry.timestamp))
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.caption)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            if HistoryStore.shared.copyToClipboard(entry: entry) {
+                                Feedback.playSuccessSound()
+                            }
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.clipboard")
                         }
-                    } label: {
-                        Label("Copy", systemImage: "doc.on.clipboard")
-                    }
-                    .buttonStyle(.borderedProminent)
+                        .buttonStyle(.borderedProminent)
 
-                    Button(role: .destructive) {
-                        HistoryStore.shared.delete(entry: entry)
-                        onDismiss()
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                        Button(role: .destructive) {
+                            HistoryStore.shared.delete(entry: entry)
+                            onDismiss()
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
                 }
+                .padding(32)
             }
-            .padding(32)
         }
         .onAppear { loadFullImage() }
+        .onChange(of: currentIndex) { _, _ in
+            fullImage = nil
+            loadFullImage()
+        }
         .onExitCommand { onDismiss() }
+        .onKeyPress(.leftArrow) {
+            if hasPrevious { onSelect(currentIndex - 1) }
+            return .handled
+        }
+        .onKeyPress(.rightArrow) {
+            if hasNext { onSelect(currentIndex + 1) }
+            return .handled
+        }
     }
 
     @ViewBuilder
@@ -147,6 +196,18 @@ private struct HistoryDetailView: View {
             ProgressView()
                 .frame(width: 200, height: 150)
         }
+    }
+
+    private func navButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(width: 40, height: 40)
+                .background(.white.opacity(0.15), in: Circle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func loadFullImage() {
