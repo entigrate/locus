@@ -6,16 +6,14 @@ A macOS menu bar app that captures the window under your cursor with one hotkey 
 
 ## The Problem
 
-Sharing what's on your screen takes too many steps:
+Even with macOS clipboard shortcuts, capturing a window takes multiple steps:
 
-1. Cmd+Shift+4 (enter screenshot mode)
+1. Cmd+Ctrl+Shift+4 (enter screenshot mode, copy to clipboard)
 2. Spacebar (switch to window mode)
 3. Click the window
-4. Find the file on your Desktop
-5. Copy the file
-6. Paste
+4. Paste
 
-**Locus reduces this to one hotkey + Cmd+V.**
+**Locus reduces this to one hotkey + Cmd+V.** No mode switching, no aiming, no clicking — just hover and press.
 
 ## Features
 
