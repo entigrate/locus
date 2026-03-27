@@ -4,14 +4,14 @@ import XCTest
 final class HotkeyBindingTests: XCTestCase {
     // MARK: - Display String
 
-    func testDisplayStringCmdShiftW() {
+    func testDisplayStringCmdShift1() {
         let binding = HotkeyBinding.defaultCaptureWindow
-        XCTAssertEqual(binding.displayString, "\u{21E7}\u{2318}W")
+        XCTAssertEqual(binding.displayString, "\u{21E7}\u{2318}1")
     }
 
-    func testDisplayStringCmdShiftF() {
+    func testDisplayStringCmdShift2() {
         let binding = HotkeyBinding.defaultCaptureFullScreen
-        XCTAssertEqual(binding.displayString, "\u{21E7}\u{2318}F")
+        XCTAssertEqual(binding.displayString, "\u{21E7}\u{2318}2")
     }
 
     func testDisplayStringCmdOnly() {
@@ -36,21 +36,21 @@ final class HotkeyBindingTests: XCTestCase {
     // MARK: - Matches
 
     func testMatchesExactKeyAndModifiers() {
-        let binding = HotkeyBinding.defaultCaptureWindow // Cmd+Shift+W, keyCode 13
+        let binding = HotkeyBinding.defaultCaptureWindow // Cmd+Shift+1, keyCode 18
         let flags = CGEventFlags([.maskCommand, .maskShift])
-        XCTAssertTrue(binding.matches(keyCode: 13, flags: flags))
+        XCTAssertTrue(binding.matches(keyCode: 18, flags: flags))
     }
 
     func testDoesNotMatchWrongKeyCode() {
         let binding = HotkeyBinding.defaultCaptureWindow
         let flags = CGEventFlags([.maskCommand, .maskShift])
-        XCTAssertFalse(binding.matches(keyCode: 5, flags: flags))
+        XCTAssertFalse(binding.matches(keyCode: 99, flags: flags))
     }
 
     func testDoesNotMatchWrongModifiers() {
         let binding = HotkeyBinding.defaultCaptureWindow
         let flags = CGEventFlags([.maskCommand]) // missing Shift
-        XCTAssertFalse(binding.matches(keyCode: 13, flags: flags))
+        XCTAssertFalse(binding.matches(keyCode: 18, flags: flags))
     }
 
     func testMatchesIgnoresExtraDeviceFlags() {
@@ -58,13 +58,13 @@ final class HotkeyBindingTests: XCTestCase {
         // Simulates real CGEvent flags which include device-dependent bits
         var flags = CGEventFlags([.maskCommand, .maskShift])
         flags.insert(CGEventFlags(rawValue: 0x2000_0100)) // extra device flag
-        XCTAssertTrue(binding.matches(keyCode: 13, flags: flags))
+        XCTAssertTrue(binding.matches(keyCode: 18, flags: flags))
     }
 
     func testDoesNotMatchExtraModifier() {
         let binding = HotkeyBinding.defaultCaptureWindow // Cmd+Shift
         let flags = CGEventFlags([.maskCommand, .maskShift, .maskControl])
-        XCTAssertFalse(binding.matches(keyCode: 13, flags: flags))
+        XCTAssertFalse(binding.matches(keyCode: 18, flags: flags))
     }
 
     // MARK: - Codable
@@ -79,8 +79,8 @@ final class HotkeyBindingTests: XCTestCase {
     // MARK: - Equatable
 
     func testEqualBindings() {
-        let lhs = HotkeyBinding(keyCode: 13, modifierFlags: 1_179_648, displayKey: "W")
-        let rhs = HotkeyBinding(keyCode: 13, modifierFlags: 1_179_648, displayKey: "W")
+        let lhs = HotkeyBinding(keyCode: 18, modifierFlags: 1_179_648, displayKey: "1")
+        let rhs = HotkeyBinding(keyCode: 18, modifierFlags: 1_179_648, displayKey: "1")
         XCTAssertEqual(lhs, rhs)
     }
 
