@@ -10,9 +10,6 @@ ENTITLEMENTS="$PROJECT_DIR/Resources/Locus.entitlements"
 RESET_PERMISSIONS=false
 RELEASE=false
 
-DEVELOPER_ID="Developer ID Application: Jin Lee (***REMOVED***)"
-TEAM_ID="***REMOVED***"
-
 for arg in "$@"; do
     case "$arg" in
         --reset) RESET_PERMISSIONS=true ;;
@@ -51,14 +48,16 @@ fi
 if $RELEASE; then
     # --- Release build: Developer ID signing + notarization + DMG ---
 
+    DEVELOPER_ID="${LOCUS_DEVELOPER_ID:?Set LOCUS_DEVELOPER_ID}"
+    TEAM_ID="${LOCUS_TEAM_ID:?Set LOCUS_TEAM_ID}"
+    APPLE_ID="${LOCUS_APPLE_ID:?Set LOCUS_APPLE_ID}"
+
     if [ -z "${LOCUS_NOTARIZE_PASSWORD:-}" ]; then
         echo "Error: LOCUS_NOTARIZE_PASSWORD not set."
         echo "Generate an app-specific password at https://account.apple.com"
         echo "Then: export LOCUS_NOTARIZE_PASSWORD=\"xxxx-xxxx-xxxx-xxxx\""
         exit 1
     fi
-
-    APPLE_ID="***REMOVED***"
     VERSION=$(defaults read "$APP_BUNDLE/Contents/Info.plist" CFBundleShortVersionString)
     DMG_NAME="Locus-${VERSION}.dmg"
     DMG_PATH="$PROJECT_DIR/$DMG_NAME"
