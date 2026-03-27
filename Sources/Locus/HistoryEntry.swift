@@ -7,4 +7,8 @@ struct HistoryEntry: Codable, Identifiable, Equatable {
     let appName: String?
     let windowTitle: String?
     let fileSize: Int64
+
+    var displayName: String {
+        appName ?? windowTitle ?? "Capture"
+    }
 }

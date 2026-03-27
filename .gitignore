@@ -7,7 +7,9 @@ Package.resolved
 
 # App bundle and release DMG (built artifacts)
 Locus.app/
+Locus Dev.app/
 Locus-*.dmg
+rw.*.dmg
 
 # Xcode
 xcuserdata/

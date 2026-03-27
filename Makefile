@@ -10,7 +10,7 @@ build-reset:
 
 # Run the app
 run: build
-	open Locus.app
+	open "Locus Dev.app"
 
 # Signed, notarized release DMG
 release:
@@ -39,7 +39,7 @@ test:
 # Clean build artifacts
 clean:
 	swift package clean
-	rm -rf Locus.app
+	rm -rf Locus.app "Locus Dev.app"
 
 # First-time setup: install tools and configure git hooks
 setup:
