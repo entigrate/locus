@@ -3,8 +3,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-APP_NAME="Locus"
-APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
 BUNDLE_ID="com.locus.app"
 ENTITLEMENTS="$PROJECT_DIR/Resources/Locus.entitlements"
 RESET_PERMISSIONS=false
@@ -16,6 +14,14 @@ for arg in "$@"; do
         --release) RELEASE=true ;;
     esac
 done
+
+if $RELEASE; then
+    APP_NAME="Locus"
+else
+    APP_NAME="Locus Dev"
+    BUNDLE_ID="com.locus.app.dev"
+fi
+APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
 
 if $RESET_PERMISSIONS; then
     echo "Resetting permissions..."
@@ -33,9 +39,13 @@ rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
-cp ".build/release/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
-install_name_tool -add_rpath @executable_path/../Frameworks "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+cp ".build/release/Locus" "$APP_BUNDLE/Contents/MacOS/Locus"
+install_name_tool -add_rpath @executable_path/../Frameworks "$APP_BUNDLE/Contents/MacOS/Locus"
 cp "Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
+# Patch bundle ID and name for dev vs release
+defaults write "$APP_BUNDLE/Contents/Info.plist" CFBundleIdentifier "$BUNDLE_ID"
+defaults write "$APP_BUNDLE/Contents/Info.plist" CFBundleName "$APP_NAME"
+defaults write "$APP_BUNDLE/Contents/Info.plist" CFBundleExecutable "Locus"
 cp "Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
 # Bundle Sparkle framework

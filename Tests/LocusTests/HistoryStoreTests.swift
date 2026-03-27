@@ -166,6 +166,78 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].windowTitle, "Title")
     }
 
+    // MARK: - Display Name
+
+    func testDisplayNamePrefersAppName() {
+        let entry = HistoryEntry(id: UUID(), timestamp: Date(), filename: "test.png", appName: "Safari", windowTitle: "Google", fileSize: 0)
+        XCTAssertEqual(entry.displayName, "Safari")
+    }
+
+    func testDisplayNameFallsBackToWindowTitle() {
+        let entry = HistoryEntry(id: UUID(), timestamp: Date(), filename: "test.png", appName: nil, windowTitle: "My Window", fileSize: 0)
+        XCTAssertEqual(entry.displayName, "My Window")
+    }
+
+    func testDisplayNameFallsBackToCapture() {
+        let entry = HistoryEntry(id: UUID(), timestamp: Date(), filename: "test.png", appName: nil, windowTitle: nil, fileSize: 0)
+        XCTAssertEqual(entry.displayName, "Capture")
+    }
+
+    // MARK: - Suggested Filename
+
+    func testSuggestedFilenameWithAppName() {
+        store.save(pngData: samplePNG, appName: "Safari", windowTitle: "Google")
+        let entry = store.entries[0]
+
+        let filename = store.suggestedFilename(for: entry)
+
+        XCTAssertTrue(filename.hasPrefix("Locus - Safari - "))
+        XCTAssertTrue(filename.hasSuffix(".png"))
+    }
+
+    func testSuggestedFilenameWithoutAppName() {
+        store.save(pngData: samplePNG, appName: nil, windowTitle: "My Window")
+        let entry = store.entries[0]
+
+        let filename = store.suggestedFilename(for: entry)
+
+        XCTAssertTrue(filename.hasPrefix("Locus - My Window - "))
+        XCTAssertTrue(filename.hasSuffix(".png"))
+    }
+
+    func testSuggestedFilenameFallback() {
+        store.save(pngData: samplePNG, appName: nil, windowTitle: nil)
+        let entry = store.entries[0]
+
+        let filename = store.suggestedFilename(for: entry)
+
+        XCTAssertTrue(filename.hasPrefix("Locus - Capture - "))
+        XCTAssertTrue(filename.hasSuffix(".png"))
+    }
+
+    func testSuggestedFilenameContainsDate() {
+        store.save(pngData: samplePNG, appName: "Test", windowTitle: nil)
+        let entry = store.entries[0]
+
+        let filename = store.suggestedFilename(for: entry)
+
+        // Should contain "at" from the date format "yyyy-MM-dd at h.mm.ss a"
+        XCTAssertTrue(filename.contains(" at "))
+    }
+
+    // MARK: - Item Provider
+
+    func testItemProviderCreatesTempFileWithCorrectName() {
+        store.save(pngData: samplePNG, appName: "Safari", windowTitle: nil)
+        let entry = store.entries[0]
+
+        let provider = store.itemProvider(for: entry)
+
+        XCTAssertNotNil(provider.suggestedName)
+        XCTAssertTrue(provider.suggestedName?.hasPrefix("Locus - Safari - ") ?? false)
+        XCTAssertTrue(provider.hasItemConformingToTypeIdentifier("public.png"))
+    }
+
     // MARK: - Copy to Clipboard
 
     func testCopyToClipboard() {

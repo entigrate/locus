@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 
 @MainActor
 final class HistoryStore: ObservableObject {
@@ -86,6 +87,55 @@ final class HistoryStore: ObservableObject {
         pasteboard.clearContents()
         pasteboard.setData(data, forType: .png)
         return true
+    }
+
+    func saveToFile(entry: HistoryEntry) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = suggestedFilename(for: entry)
+        panel.canCreateDirectories = true
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            try FileManager.default.copyItem(at: fileURL(for: entry), to: url)
+        } catch {
+            #if DEBUG
+                print("[Locus] Failed to save file: \(error)")
+            #endif
+        }
+    }
+
+    private static let saveFileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd 'at' h.mm.ss a"
+        return formatter
+    }()
+
+    func itemProvider(for entry: HistoryEntry) -> NSItemProvider {
+        let filename = suggestedFilename(for: entry)
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("locus-drag")
+        // Clean previous drag files to avoid unbounded temp growth
+        try? FileManager.default.removeItem(at: tempDir)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        let tempFile = tempDir.appendingPathComponent(filename)
+        do {
+            try FileManager.default.copyItem(at: fileURL(for: entry), to: tempFile)
+        } catch {
+            #if DEBUG
+                print("[Locus] Failed to create drag file: \(error)")
+            #endif
+            return NSItemProvider()
+        }
+        let provider = NSItemProvider(contentsOf: tempFile) ?? NSItemProvider()
+        provider.suggestedName = (filename as NSString).deletingPathExtension
+        return provider
+    }
+
+    func suggestedFilename(for entry: HistoryEntry) -> String {
+        let appName = entry.displayName
+        let dateString = Self.saveFileDateFormatter.string(from: entry.timestamp)
+        return "Locus - \(appName) - \(dateString).png"
     }
 
     func enforceLimit() {

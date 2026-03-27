@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HistoryView: View {
     @ObservedObject private var store = HistoryStore.shared
+    @Environment(\.openWindow) private var openWindow
     @State private var showClearConfirmation = false
     @State private var selectedEntry: HistoryEntry?
 
@@ -72,6 +73,15 @@ struct HistoryView: View {
             Text("\(store.entries.count) captures \u{2014} \(formattedDiskUsage)")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            if let limit = SettingsStore.shared.historyLimit {
+                Button("keeping last \(limit)") {
+                    NSApp.activate()
+                    openWindow(id: "settings")
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundColor(.accentColor)
+            }
             Spacer()
             Button("Clear All") {
                 showClearConfirmation = true
@@ -137,9 +147,10 @@ private struct HistoryDetailView: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .shadow(radius: 20)
+                        .onDrag { HistoryStore.shared.itemProvider(for: entry) }
 
                     HStack(spacing: 8) {
-                        Text(entry.appName ?? entry.windowTitle ?? "Capture")
+                        Text(entry.displayName)
                             .fontWeight(.medium)
                         Text("\u{2014}")
                             .foregroundColor(.secondary)
@@ -157,6 +168,13 @@ private struct HistoryDetailView: View {
                             Label("Copy", systemImage: "doc.on.clipboard")
                         }
                         .buttonStyle(.borderedProminent)
+
+                        Button {
+                            HistoryStore.shared.saveToFile(entry: entry)
+                        } label: {
+                            Label("Save", systemImage: "square.and.arrow.down")
+                        }
+                        .buttonStyle(.bordered)
 
                         Button(role: .destructive) {
                             HistoryStore.shared.delete(entry: entry)
@@ -235,13 +253,14 @@ private struct HistoryCell: View {
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .contentShape(RoundedRectangle(cornerRadius: 6))
                     .onTapGesture { onSelect() }
+                    .onDrag { HistoryStore.shared.itemProvider(for: entry) }
 
                 if isHovered {
                     hoverActions
                 }
             }
 
-            Text(entry.appName ?? entry.windowTitle ?? "Capture")
+            Text(entry.displayName)
                 .font(.caption)
                 .fontWeight(.medium)
                 .lineLimit(1)
@@ -277,29 +296,29 @@ private struct HistoryCell: View {
 
     private var hoverActions: some View {
         HStack(spacing: 4) {
-            Button {
+            hoverButton(systemImage: "doc.on.clipboard") {
                 if HistoryStore.shared.copyToClipboard(entry: entry) {
                     Feedback.playSuccessSound()
                 }
-            } label: {
-                Image(systemName: "doc.on.clipboard")
-                    .font(.caption)
-                    .padding(6)
-                    .background(.ultraThickMaterial, in: Circle())
             }
-            .buttonStyle(.plain)
-
-            Button {
+            hoverButton(systemImage: "square.and.arrow.down") {
+                HistoryStore.shared.saveToFile(entry: entry)
+            }
+            hoverButton(systemImage: "trash") {
                 HistoryStore.shared.delete(entry: entry)
-            } label: {
-                Image(systemName: "trash")
-                    .font(.caption)
-                    .padding(6)
-                    .background(.ultraThickMaterial, in: Circle())
             }
-            .buttonStyle(.plain)
         }
         .padding(6)
+    }
+
+    private func hoverButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.caption)
+                .padding(6)
+                .background(.ultraThickMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func loadThumbnail() {
