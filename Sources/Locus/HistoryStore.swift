@@ -133,7 +133,7 @@ final class HistoryStore: ObservableObject {
     }
 
     func suggestedFilename(for entry: HistoryEntry) -> String {
-        let appName = entry.displayName
+        let appName = entry.displayName.replacingOccurrences(of: "/", with: "-")
         let dateString = Self.saveFileDateFormatter.string(from: entry.timestamp)
         return "Locus - \(appName) - \(dateString).png"
     }
