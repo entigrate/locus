@@ -7,19 +7,19 @@ final class SettingsStoreTests: XCTestCase {
     func testDefaultCaptureWindowBinding() {
         let store = SettingsStore.shared
         let defaultBinding = HotkeyBinding.defaultCaptureWindow
-        // Verify the default key code and modifiers are correct for Cmd+Shift+W
-        XCTAssertEqual(defaultBinding.keyCode, 13) // W key
-        XCTAssertEqual(defaultBinding.displayKey, "W")
-        XCTAssertEqual(defaultBinding.displayString, "\u{21E7}\u{2318}W")
+        // Verify the default key code and modifiers are correct for Cmd+Shift+1
+        XCTAssertEqual(defaultBinding.keyCode, 18) // 1 key
+        XCTAssertEqual(defaultBinding.displayKey, "1")
+        XCTAssertEqual(defaultBinding.displayString, "\u{21E7}\u{2318}1")
         // Store should have a valid binding (either default or user-configured)
         XCTAssertGreaterThan(store.captureWindow.modifierFlags, 0)
     }
 
     func testDefaultCaptureFullScreenBinding() {
         let defaultBinding = HotkeyBinding.defaultCaptureFullScreen
-        XCTAssertEqual(defaultBinding.keyCode, 3) // F key
-        XCTAssertEqual(defaultBinding.displayKey, "F")
-        XCTAssertEqual(defaultBinding.displayString, "\u{21E7}\u{2318}F")
+        XCTAssertEqual(defaultBinding.keyCode, 19) // 2 key
+        XCTAssertEqual(defaultBinding.displayKey, "2")
+        XCTAssertEqual(defaultBinding.displayString, "\u{21E7}\u{2318}2")
     }
 
     func testDefaultSoundName() {

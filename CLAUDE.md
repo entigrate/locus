@@ -1,6 +1,6 @@
 # Locus
 
-A macOS menu bar app that captures the window under your cursor with a hotkey (Cmd+Shift+W) and copies it to clipboard.
+A macOS menu bar app that captures the window under your cursor with a hotkey (Cmd+Shift+1) and copies it to clipboard.
 
 ## Build & Run
 
