@@ -7,15 +7,15 @@
     <language>en</language>
     <item>
       <title>Version 0.1.2</title>
-      <pubDate>Thu, 26 Mar 2026 10:28:04 -0700</pubDate>
+      <pubDate>Thu, 26 Mar 2026 17:35:02 -0700</pubDate>
       <sparkle:version>0.1.2</sparkle:version>
       <sparkle:shortVersionString>0.1.2</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
         url="https://github.com/entigrate/locus/releases/download/v0.1.2/Locus-0.1.2.dmg"
-        length="2770720"
+        length="2770714"
         type="application/octet-stream"
-        sparkle:edSignature="sxrUbzg2dGG7elk3HzWwLM7xFlBKD9tgsIRu1XKh90hKtPEF5Pwv5C8Crid8fKqyPGdBpxvPUsfz1wL5PDmqCw=="
+        sparkle:edSignature="tduQdK8VPCkMQmSTAIZp4q8eh2dQ5SYHniNIxW0sm7EY2Z6mr8Od+SGkAkVUX580VYbTaDN9CoZnCY8vfY1aBA=="
       />
     </item>
   </channel>
