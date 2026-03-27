@@ -49,7 +49,10 @@ struct MenuContent: View {
             Divider()
 
             Button("History  \(store.openHistory.displayString)") {
-                AppDelegate.openHistoryWindow()
+                // Async dispatch lets the menu dismiss before the window appears
+                DispatchQueue.main.async {
+                    AppDelegate.openHistoryWindow()
+                }
             }
 
             Button("Check for Updates\u{2026}") {
@@ -57,8 +60,10 @@ struct MenuContent: View {
             }
 
             Button("Settings\u{2026}") {
-                openWindow(id: "settings")
-                NSApp.activate()
+                DispatchQueue.main.async { [openWindow] in
+                    NSApp.activate()
+                    openWindow(id: "settings")
+                }
             }
 
             Button("Quit Locus") {

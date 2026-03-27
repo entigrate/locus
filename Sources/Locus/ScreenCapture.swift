@@ -11,7 +11,9 @@ enum ScreenCapture {
 
             let filter = SCContentFilter(desktopIndependentWindow: scWindow)
             let config = SCStreamConfiguration()
-            let scaleFactor = await MainActor.run { NSScreen.screens.first?.backingScaleFactor ?? 2.0 }
+            let scaleFactor = await MainActor.run {
+                scaleFactorForPoint(CGPoint(x: scWindow.frame.midX, y: scWindow.frame.midY))
+            }
             config.width = Int(scWindow.frame.width * scaleFactor)
             config.height = Int(scWindow.frame.height * scaleFactor)
 
@@ -27,11 +29,16 @@ enum ScreenCapture {
     static func captureFullScreenToClipboard() async -> Data? {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-            guard let display = content.displays.first else { return nil }
+
+            let (mouseLocation, scaleFactor) = await MainActor.run {
+                let point = NSEvent.mouseLocation
+                return (point, scaleFactorForPoint(point))
+            }
+            let display = content.displays.first { $0.frame.contains(mouseLocation) } ?? content.displays.first
+            guard let display else { return nil }
 
             let filter = SCContentFilter(display: display, excludingWindows: [])
             let config = SCStreamConfiguration()
-            let scaleFactor = await MainActor.run { NSScreen.screens.first?.backingScaleFactor ?? 2.0 }
             config.width = Int(CGFloat(display.width) * scaleFactor)
             config.height = Int(CGFloat(display.height) * scaleFactor)
 
@@ -42,6 +49,12 @@ enum ScreenCapture {
             #endif
             return nil
         }
+    }
+
+    @MainActor
+    private static func scaleFactorForPoint(_ point: NSPoint) -> CGFloat {
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) ?? NSScreen.screens.first
+        return screen?.backingScaleFactor ?? 2.0
     }
 
     private static func captureAndCopy(filter: SCContentFilter, configuration: SCStreamConfiguration) async throws -> Data? {
