@@ -19,8 +19,8 @@ Sharing what's on your screen takes too many steps:
 
 ## Features
 
-- **Instant window capture** — press Cmd+Shift+W to capture the window under your cursor
-- **Full screen capture** — press Cmd+Shift+F to capture the entire screen
+- **Instant window capture** — press Cmd+Shift+1 to capture the window under your cursor
+- **Full screen capture** — press Cmd+Shift+2 to capture the entire screen
 - **Capture history** — browse, re-copy, and manage past captures with Cmd+Shift+H
 - **Configurable shortcuts** — set your own hotkeys in Settings
 - **Audio and visual feedback** — confirmation sound and screen flash on capture
@@ -61,7 +61,7 @@ Both are standard macOS permissions with system-level prompts. The source code i
 ## Usage
 
 1. Hover your cursor over any window
-2. Press **Cmd+Shift+W** to capture the window
+2. Press **Cmd+Shift+1** to capture the window
 3. The capture is copied to your clipboard — paste anywhere with **Cmd+V**
 
 Access Settings, capture history, and more from the menu bar icon.
