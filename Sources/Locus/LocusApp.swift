@@ -11,12 +11,6 @@ struct LocusApp: App {
             MenuContent(appDelegate: appDelegate, checkForUpdates: updaterController.updater.checkForUpdates)
         }
         .menuBarExtraStyle(.menu)
-
-        Window("Locus Settings", id: "settings") {
-            SettingsView()
-        }
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
     }
 }
 
@@ -24,7 +18,6 @@ struct MenuContent: View {
     let appDelegate: AppDelegate
     let checkForUpdates: () -> Void
     @ObservedObject private var store = SettingsStore.shared
-    @Environment(\.openWindow) private var openWindow
     @State private var hotkeyReady = false
 
     var body: some View {
@@ -60,9 +53,8 @@ struct MenuContent: View {
             }
 
             Button("Settings\u{2026}") {
-                DispatchQueue.main.async { [openWindow] in
-                    NSApp.activate()
-                    openWindow(id: "settings")
+                DispatchQueue.main.async {
+                    AppDelegate.openMainWindow(tab: .settings)
                 }
             }
 
