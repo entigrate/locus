@@ -76,7 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     static func openMainWindow(tab: MainTab) {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
-        if let existing = mainWindow, existing.isVisible {
+        if let existing = mainWindow {
             if WindowState.shared.selectedTab != tab {
                 WindowState.shared.selectedTab = tab
             }
@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.setContentSize(NSSize(width: 900, height: 600))
         window.minSize = NSSize(width: 600, height: 400)
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
-        window.center()
+        window.setFrameAutosaveName("MainWindow")
         window.delegate = mainWindowDelegate
         mainWindow = window
         window.makeKeyAndOrderFront(nil)
