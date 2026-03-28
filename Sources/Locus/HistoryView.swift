@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HistoryView: View {
     @ObservedObject private var store = HistoryStore.shared
-    @Environment(\.openWindow) private var openWindow
     @State private var showClearConfirmation = false
     @State private var selectedEntry: HistoryEntry?
 
@@ -75,8 +74,7 @@ struct HistoryView: View {
                 .foregroundColor(.secondary)
             if let limit = SettingsStore.shared.historyLimit {
                 Button("keeping last \(limit)") {
-                    NSApp.activate()
-                    openWindow(id: "settings")
+                    WindowState.shared.selectedTab = .settings
                 }
                 .font(.caption)
                 .buttonStyle(.plain)

@@ -68,24 +68,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - History Window
+    // MARK: - Main Window
 
-    private static var historyWindow: NSWindow?
+    private static var mainWindow: NSWindow?
+    private static let mainWindowDelegate = MainWindowCloseHandler()
 
-    static func openHistoryWindow() {
+    static func openMainWindow(tab: MainTab) {
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate()
-        if let existing = historyWindow, existing.isVisible {
+        if let existing = mainWindow {
+            if WindowState.shared.selectedTab != tab {
+                WindowState.shared.selectedTab = tab
+            }
             existing.makeKeyAndOrderFront(nil)
             return
         }
-        let controller = NSHostingController(rootView: HistoryView())
+        WindowState.shared.selectedTab = tab
+        let controller = NSHostingController(rootView: MainWindowView())
         let window = NSWindow(contentViewController: controller)
-        window.title = "Capture History"
+        window.title = "Locus"
         window.setContentSize(NSSize(width: 900, height: 600))
+        window.minSize = NSSize(width: 600, height: 400)
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
-        window.center()
-        historyWindow = window
+        window.setFrameAutosaveName("MainWindow")
+        window.delegate = mainWindowDelegate
+        mainWindow = window
         window.makeKeyAndOrderFront(nil)
+    }
+
+    static func openHistoryWindow() {
+        openMainWindow(tab: .history)
+    }
+
+    private class MainWindowCloseHandler: NSObject, NSWindowDelegate {
+        func windowWillClose(_: Notification) {
+            AppDelegate.mainWindow = nil
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 
     // MARK: - Capture Actions
