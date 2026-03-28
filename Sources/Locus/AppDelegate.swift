@@ -38,6 +38,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HotkeyManager.shared.onOpenHistory = {
             Self.openHistoryWindow()
         }
+        HotkeyManager.shared.onRecordWindow = {
+            Task { @MainActor in Self.toggleRecording(fullScreen: false) }
+        }
+        HotkeyManager.shared.onRecordFullScreen = {
+            Task { @MainActor in Self.toggleRecording(fullScreen: true) }
+        }
 
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
         if AXIsProcessTrustedWithOptions(options) {
@@ -100,10 +106,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         openMainWindow(tab: .history)
     }
 
+    static var isMainWindowVisible: Bool {
+        mainWindow?.isVisible ?? false
+    }
+
     private class MainWindowCloseHandler: NSObject, NSWindowDelegate {
         func windowWillClose(_: Notification) {
             AppDelegate.mainWindow = nil
             NSApp.setActivationPolicy(.accessory)
+        }
+    }
+
+    // MARK: - Recording Actions
+
+    @MainActor static func toggleRecording(fullScreen: Bool) {
+        let recorder = VideoRecorder.shared
+        if recorder.isRecording {
+            recorder.stopRecording()
+        } else {
+            Task {
+                if fullScreen {
+                    await recorder.startFullScreenRecording()
+                } else {
+                    await recorder.startWindowRecording()
+                }
+            }
         }
     }
 

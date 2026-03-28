@@ -16,6 +16,14 @@ final class SettingsStore: ObservableObject {
         didSet { saveBindings() }
     }
 
+    @Published var recordWindow: HotkeyBinding {
+        didSet { saveBindings() }
+    }
+
+    @Published var recordFullScreen: HotkeyBinding {
+        didSet { saveBindings() }
+    }
+
     @Published var soundName: String {
         didSet { UserDefaults.standard.set(soundName, forKey: "soundName") }
     }
@@ -59,6 +67,8 @@ final class SettingsStore: ObservableObject {
         captureWindow = Self.loadBinding(key: "captureWindowHotkey") ?? .defaultCaptureWindow
         captureFullScreen = Self.loadBinding(key: "captureFullScreenHotkey") ?? .defaultCaptureFullScreen
         openHistory = Self.loadBinding(key: "openHistoryHotkey") ?? .defaultOpenHistory
+        recordWindow = Self.loadBinding(key: "recordWindowHotkey") ?? .defaultRecordWindow
+        recordFullScreen = Self.loadBinding(key: "recordFullScreenHotkey") ?? .defaultRecordFullScreen
         soundName = UserDefaults.standard.string(forKey: "soundName") ?? "Glass"
         soundVolume = UserDefaults.standard.object(forKey: "soundVolume") as? Float ?? 1.0
         launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -73,6 +83,8 @@ final class SettingsStore: ObservableObject {
         captureWindow = .defaultCaptureWindow
         captureFullScreen = .defaultCaptureFullScreen
         openHistory = .defaultOpenHistory
+        recordWindow = .defaultRecordWindow
+        recordFullScreen = .defaultRecordFullScreen
         soundName = "Glass"
         soundVolume = 1.0
         historyLimit = 10
@@ -82,6 +94,8 @@ final class SettingsStore: ObservableObject {
         Self.storeBinding(captureWindow, key: "captureWindowHotkey")
         Self.storeBinding(captureFullScreen, key: "captureFullScreenHotkey")
         Self.storeBinding(openHistory, key: "openHistoryHotkey")
+        Self.storeBinding(recordWindow, key: "recordWindowHotkey")
+        Self.storeBinding(recordFullScreen, key: "recordFullScreenHotkey")
     }
 
     private static func loadBinding(key: String) -> HotkeyBinding? {

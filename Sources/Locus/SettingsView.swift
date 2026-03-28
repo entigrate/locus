@@ -9,11 +9,35 @@ struct SettingsView: View {
                 .font(.headline)
                 .padding(.bottom, 16)
 
-            ShortcutRow(label: "Capture Window", binding: $store.captureWindow, conflictsWith: [store.captureFullScreen, store.openHistory])
+            ShortcutRow(
+                label: "Capture Window",
+                binding: $store.captureWindow,
+                conflictsWith: [store.captureFullScreen, store.openHistory, store.recordWindow, store.recordFullScreen]
+            )
             Divider().padding(.vertical, 8)
-            ShortcutRow(label: "Capture Full Screen", binding: $store.captureFullScreen, conflictsWith: [store.captureWindow, store.openHistory])
+            ShortcutRow(
+                label: "Capture Full Screen",
+                binding: $store.captureFullScreen,
+                conflictsWith: [store.captureWindow, store.openHistory, store.recordWindow, store.recordFullScreen]
+            )
             Divider().padding(.vertical, 8)
-            ShortcutRow(label: "Open History", binding: $store.openHistory, conflictsWith: [store.captureWindow, store.captureFullScreen])
+            ShortcutRow(
+                label: "Open History",
+                binding: $store.openHistory,
+                conflictsWith: [store.captureWindow, store.captureFullScreen, store.recordWindow, store.recordFullScreen]
+            )
+            Divider().padding(.vertical, 8)
+            ShortcutRow(
+                label: "Record Window",
+                binding: $store.recordWindow,
+                conflictsWith: [store.captureWindow, store.captureFullScreen, store.openHistory, store.recordFullScreen]
+            )
+            Divider().padding(.vertical, 8)
+            ShortcutRow(
+                label: "Record Full Screen",
+                binding: $store.recordFullScreen,
+                conflictsWith: [store.captureWindow, store.captureFullScreen, store.openHistory, store.recordWindow]
+            )
 
             Spacer().frame(height: 24)
 
