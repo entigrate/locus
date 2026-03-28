@@ -6,16 +6,16 @@
     <description>Locus update feed</description>
     <language>en</language>
     <item>
-      <title>Version 0.1.6</title>
-      <pubDate>Fri, 27 Mar 2026 06:35:27 -0700</pubDate>
-      <sparkle:version>0.1.6</sparkle:version>
-      <sparkle:shortVersionString>0.1.6</sparkle:shortVersionString>
+      <title>Version 0.2.0</title>
+      <pubDate>Sat, 28 Mar 2026 09:32:49 -0700</pubDate>
+      <sparkle:version>0.2.0</sparkle:version>
+      <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/entigrate/locus/releases/download/v0.1.6/Locus-0.1.6.dmg"
-        length="2790465"
+        url="https://github.com/entigrate/locus/releases/download/v0.2.0/Locus-0.2.0.dmg"
+        length="2794115"
         type="application/octet-stream"
-        sparkle:edSignature="ag73ZjXnwztRi4HzFDLewj5yWCUrPC1mYhko9YPxpxddgzxuTIG63pyGVZAucOzKytootIbLExlZ+NLquXNrBg=="
+        sparkle:edSignature="6F0zI2W9KipegH5s33Gvy54rf8AZnz5t2NB0p+oypKoG2NeSsEwxfijLwgX0paavJioFyEZZCM4h6XXfi/AlCQ=="
       />
     </item>
   </channel>
