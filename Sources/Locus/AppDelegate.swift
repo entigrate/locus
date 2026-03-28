@@ -81,7 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     static func openMainWindow(tab: MainTab) {
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
         if let existing = mainWindow {
             if WindowState.shared.selectedTab != tab {
                 WindowState.shared.selectedTab = tab
@@ -137,19 +137,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Capture Actions
 
     static func performWindowCapture() {
-        guard let window = WindowDetector.windowUnderCursor() else {
+        // Run window detection off the main thread to avoid blocking the event tap
+        Task.detached {
+            guard let window = WindowDetector.windowUnderCursor() else {
+                #if DEBUG
+                    print("[Locus] No window found under cursor")
+                #endif
+                await MainActor.run { Feedback.captureFailure() }
+                return
+            }
+
             #if DEBUG
-                print("[Locus] No window found under cursor")
+                print("[Locus] Capturing: \(window.ownerName) (ID: \(window.windowID))")
             #endif
-            Feedback.captureFailure()
-            return
-        }
 
-        #if DEBUG
-            print("[Locus] Capturing: \(window.ownerName) (ID: \(window.windowID))")
-        #endif
-
-        Task {
             if let pngData = await ScreenCapture.captureWindowToClipboard(windowID: window.windowID) {
                 await MainActor.run {
                     Feedback.captureSuccess(windowBounds: window.bounds)
@@ -165,11 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     static func performFullScreenCapture() {
-        #if DEBUG
-            print("[Locus] Capturing full screen")
-        #endif
+        Task.detached {
+            #if DEBUG
+                print("[Locus] Capturing full screen")
+            #endif
 
-        Task {
             if let pngData = await ScreenCapture.captureFullScreenToClipboard() {
                 await MainActor.run {
                     Feedback.fullScreenCaptureSuccess()
