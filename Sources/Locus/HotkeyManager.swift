@@ -5,6 +5,9 @@ final class HotkeyManager {
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var tapThread: Thread?
+    private var tapRunLoop: CFRunLoop?
+    private let tapRunLoopReady = DispatchSemaphore(value: 0)
 
     var onCaptureWindow: (() -> Void)?
     var onCaptureFullScreen: (() -> Void)?
@@ -37,22 +40,53 @@ final class HotkeyManager {
 
         eventTap = tap
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+
+        // Run the event tap on a dedicated thread so main thread work
+        // never blocks keystroke processing
+        let thread = Thread { [weak self] in
+            guard let self, let source = runLoopSource else { return }
+            guard let runLoop = CFRunLoopGetCurrent() else { return }
+            tapRunLoop = runLoop
+            CFRunLoopAddSource(runLoop, source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
+
+            // Schedule health check on this thread's run loop
+            let timer = Timer(timeInterval: 5.0, repeats: true) { _ in
+                if !CGEvent.tapIsEnabled(tap: tap) {
+                    #if DEBUG
+                        print("[Locus] Event tap was disabled by system — re-enabling")
+                    #endif
+                    CGEvent.tapEnable(tap: tap, enable: true)
+                }
+            }
+            RunLoop.current.add(timer, forMode: .common)
+
+            tapRunLoopReady.signal()
+            CFRunLoopRun()
+        }
+        thread.name = "com.locus.event-tap"
+        thread.qualityOfService = .userInteractive
+        tapThread = thread
+        thread.start()
+        tapRunLoopReady.wait()
+
         #if DEBUG
-            print("[Locus] Event tap registered")
+            print("[Locus] Event tap registered on dedicated thread")
         #endif
     }
 
     func unregister() {
-        if let source = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+        if let runLoop = tapRunLoop, let source = runLoopSource {
+            CFRunLoopRemoveSource(runLoop, source, .commonModes)
+            CFRunLoopStop(runLoop)
             runLoopSource = nil
+            tapRunLoop = nil
         }
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
             eventTap = nil
         }
+        tapThread = nil
     }
 
     private func handleEvent(_ event: CGEvent) -> Unmanaged<CGEvent>? {
