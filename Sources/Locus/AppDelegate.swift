@@ -112,7 +112,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     static func performWindowCapture() {
         // Run window detection off the main thread to avoid blocking the event tap
         Task.detached {
-            guard let window = WindowDetector.windowUnderCursor() else {
+            let candidates = WindowDetector.windowsUnderCursor()
+            guard !candidates.isEmpty else {
                 #if DEBUG
                     print("[Locus] No window found under cursor")
                 #endif
@@ -120,21 +121,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            #if DEBUG
-                print("[Locus] Capturing: \(window.ownerName) (ID: \(window.windowID))")
-            #endif
+            // Fetch shareable content once for all capture attempts
+            guard let content = try? await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true) else {
+                await MainActor.run { Feedback.captureFailure() }
+                return
+            }
 
-            if let pngData = await ScreenCapture.captureWindowToClipboard(windowID: window.windowID) {
+            for (index, window) in candidates.enumerated() {
+                #if DEBUG
+                    print("[Locus] Trying window: \(window.ownerName) (ID: \(window.windowID))")
+                #endif
+
+                guard let image = await ScreenCapture.captureWindowImage(windowID: window.windowID, content: content) else {
+                    continue
+                }
+
+                // If more candidates remain, skip this window if the capture is mostly transparent
+                // (likely a screen-sharing overlay border from Teams, Zoom, etc.)
+                if index < candidates.count - 1, ScreenCapture.isMostlyTransparent(image) {
+                    #if DEBUG
+                        print("[Locus] Skipping transparent overlay: \(window.ownerName)")
+                    #endif
+                    continue
+                }
+
+                guard let pngData = ScreenCapture.pngData(from: image) else { continue }
+
                 await MainActor.run {
+                    ScreenCapture.copyToClipboard(pngData)
                     Feedback.captureSuccess(windowBounds: window.bounds)
                     HistoryStore.shared.save(pngData: pngData, appName: window.ownerName, windowTitle: window.windowName)
                 }
-            } else {
-                #if DEBUG
-                    print("[Locus] Window capture failed")
-                #endif
-                await MainActor.run { Feedback.captureFailure() }
+                return
             }
+
+            #if DEBUG
+                print("[Locus] All candidate windows failed capture")
+            #endif
+            await MainActor.run { Feedback.captureFailure() }
         }
     }
 
