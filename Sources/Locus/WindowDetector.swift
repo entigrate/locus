@@ -5,12 +5,14 @@ struct DetectedWindow {
     let bounds: CGRect
     let ownerName: String
     let windowName: String?
+    let alpha: Double
 }
 
 enum WindowDetector {
-    static func windowUnderCursor() -> DetectedWindow? {
+    /// Returns all candidate windows under the cursor, in front-to-back z-order.
+    static func windowsUnderCursor() -> [DetectedWindow] {
         let mouseLocation = NSEvent.mouseLocation
-        guard let primaryScreen = NSScreen.screens.first else { return nil }
+        guard let primaryScreen = NSScreen.screens.first else { return [] }
 
         // Convert from AppKit coordinates (bottom-left origin) to CG coordinates (top-left origin)
         let cgPoint = CGPoint(
@@ -22,8 +24,10 @@ enum WindowDetector {
             [.optionOnScreenOnly, .excludeDesktopElements],
             kCGNullWindowID
         ) as? [[String: Any]] else {
-            return nil
+            return []
         }
+
+        var results = [DetectedWindow]()
 
         // Windows are returned in front-to-back z-order
         for windowInfo in windowInfoList {
@@ -39,6 +43,8 @@ enum WindowDetector {
             // Never capture ourselves
             if ownerName == ProcessInfo.processInfo.processName { continue }
 
+            let alpha = windowInfo[kCGWindowAlpha as String] as? Double ?? 1.0
+
             let bounds = CGRect(
                 x: boundsDict["X"] ?? 0,
                 y: boundsDict["Y"] ?? 0,
@@ -51,15 +57,22 @@ enum WindowDetector {
 
             if bounds.contains(cgPoint) {
                 let windowName = windowInfo[kCGWindowName as String] as? String
-                return DetectedWindow(
+                results.append(DetectedWindow(
                     windowID: windowID,
                     bounds: bounds,
                     ownerName: ownerName,
-                    windowName: windowName
-                )
+                    windowName: windowName,
+                    alpha: alpha
+                ))
             }
         }
 
-        return nil
+        // Prefer fully opaque windows over semi-transparent ones (likely overlays),
+        // but keep both as candidates. Stable sort preserves z-order within each group.
+        return results.sorted { $0.alpha > $1.alpha }
+    }
+
+    static func windowUnderCursor() -> DetectedWindow? {
+        windowsUnderCursor().first
     }
 }
