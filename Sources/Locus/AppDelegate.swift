@@ -29,6 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Accessibility Permission
 
     private func setupHotkey() {
+        // Ensure SettingsStore is initialized on the main thread before the
+        // event tap starts — its init accesses SMAppService which requires main thread
+        _ = SettingsStore.shared
+
         HotkeyManager.shared.onCaptureWindow = {
             Self.performWindowCapture()
         }

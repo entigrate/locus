@@ -223,13 +223,25 @@ private final class StreamOutputHandler: NSObject, SCStreamOutput, SCStreamDeleg
     func stream(_: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard sampleBuffer.isValid else { return }
 
+        // Skip screen buffers that don't contain actual image data (status-only frames)
+        if type == .screen, CMSampleBufferGetImageBuffer(sampleBuffer) == nil {
+            return
+        }
+
         lock.lock()
         defer { lock.unlock() }
 
         guard writer.status != .failed, writer.status != .cancelled else { return }
 
         if !sessionStarted {
-            writer.startWriting()
+            // Only start the writing session on a video frame with valid image data
+            guard type == .screen else { return }
+            guard writer.startWriting() else {
+                #if DEBUG
+                    print("[Locus] AVAssetWriter failed to start: \(writer.error?.localizedDescription ?? "unknown")")
+                #endif
+                return
+            }
             writer.startSession(atSourceTime: sampleBuffer.presentationTimeStamp)
             sessionStarted = true
         }
@@ -251,6 +263,15 @@ private final class StreamOutputHandler: NSObject, SCStreamOutput, SCStreamDeleg
     }
 
     func finish() async {
+        let wasStarted = lock.withLock { sessionStarted }
+
+        guard wasStarted, writer.status == .writing else {
+            #if DEBUG
+                print("[Locus] Writer not in writing state (status: \(writer.status.rawValue)), skipping finish")
+            #endif
+            return
+        }
+
         markInputsFinished()
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in

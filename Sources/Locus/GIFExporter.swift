@@ -23,12 +23,42 @@ enum GIFExporter {
             case .large: 1.0
             }
         }
+
+        /// Duration (seconds) below which full FPS is used
+        fileprivate var fullFPSThreshold: Double {
+            switch self {
+            case .small: 4
+            case .medium: 6
+            case .large: 8
+            }
+        }
+
+        /// Hard cap on total frames to bound file size
+        fileprivate var maxFrames: Int {
+            switch self {
+            case .small: 100
+            case .medium: 200
+            case .large: 400
+            }
+        }
     }
 
     enum ExportError: Error {
         case noVideoTrack
         case gifCreationFailed
         case gifFinalizationFailed
+    }
+
+    static func adaptiveFrameParams(duration: Double, quality: Quality) -> (frameCount: Int, frameDelay: Double) {
+        let baseFPS = Double(quality.fps)
+        let effectiveFPS: Double = if duration <= quality.fullFPSThreshold {
+            baseFPS
+        } else {
+            baseFPS / (1.0 + log2(duration / quality.fullFPSThreshold))
+        }
+        let frameCount = min(max(1, Int(effectiveFPS * duration)), quality.maxFrames)
+        let frameDelay = duration / Double(frameCount)
+        return (frameCount, frameDelay)
     }
 
     static func exportGIF(from videoURL: URL, quality: Quality) async throws -> Data {
@@ -49,9 +79,8 @@ enum GIFExporter {
             height: round(naturalSize.height * quality.scale)
         )
 
-        let frameInterval = 1.0 / Double(quality.fps)
         let totalSeconds = CMTimeGetSeconds(duration)
-        let frameCount = max(1, Int(totalSeconds * Double(quality.fps)))
+        let (frameCount, frameInterval) = adaptiveFrameParams(duration: totalSeconds, quality: quality)
 
         let generator = AVAssetImageGenerator(asset: asset)
         generator.requestedTimeToleranceBefore = CMTime(seconds: frameInterval / 2, preferredTimescale: 600)

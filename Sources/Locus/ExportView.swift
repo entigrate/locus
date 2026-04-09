@@ -1,3 +1,4 @@
+import AVFoundation
 import AVKit
 import SwiftUI
 
@@ -16,9 +17,9 @@ struct ExportView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // Video preview
+            // Video preview using AppKit's AVPlayerView (SwiftUI VideoPlayer crashes on macOS)
             if let player {
-                VideoPlayer(player: player)
+                PlayerView(player: player)
                     .frame(height: 280)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -43,6 +44,8 @@ struct ExportView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Toggle("", isOn: $includeAudio)
                         .labelsHidden()
+                        .toggleStyle(.switch)
+                        .frame(width: 120, alignment: .trailing)
                 }
             } else {
                 HStack {
@@ -197,7 +200,6 @@ struct ExportView: View {
         exportWindow?.close()
 
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate()
         let controller = NSHostingController(rootView: ExportView(entry: entry))
         let window = NSWindow(contentViewController: controller)
         window.title = "Export Recording"
@@ -206,6 +208,7 @@ struct ExportView: View {
         window.delegate = windowDelegate
         exportWindow = window
         window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     static func close() {
@@ -220,5 +223,20 @@ struct ExportView: View {
                 NSApp.setActivationPolicy(.accessory)
             }
         }
+    }
+}
+
+struct PlayerView: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context _: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.player = player
+        view.controlsStyle = .inline
+        return view
+    }
+
+    func updateNSView(_ nsView: AVPlayerView, context _: Context) {
+        nsView.player = player
     }
 }

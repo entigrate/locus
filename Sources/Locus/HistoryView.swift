@@ -227,7 +227,7 @@ private struct HistoryDetailView: View {
     private var mediaView: some View {
         if entry.mediaType == .video {
             if let videoPlayer {
-                VideoPlayer(player: videoPlayer)
+                PlayerView(player: videoPlayer)
             } else {
                 ProgressView()
                     .frame(width: 200, height: 150)
