@@ -67,6 +67,49 @@ final class HistoryStore: ObservableObject {
         saveManifest()
     }
 
+    @discardableResult
+    func saveVideo(videoURL: URL, appName: String?, windowTitle: String?, fileSize: Int64, duration: TimeInterval?) -> HistoryEntry? {
+        let limit = SettingsStore.shared.historyLimit
+        if limit == 0 { return nil }
+
+        ensureDirectory()
+
+        let filename = "\(Self.dateFormatter.string(from: Date())).mp4"
+        let destURL = historyDirectory.appendingPathComponent(filename)
+
+        do {
+            try FileManager.default.moveItem(at: videoURL, to: destURL)
+        } catch {
+            do {
+                try FileManager.default.copyItem(at: videoURL, to: destURL)
+                try? FileManager.default.removeItem(at: videoURL)
+            } catch {
+                #if DEBUG
+                    print("[Locus] Failed to save video: \(error)")
+                #endif
+                return nil
+            }
+        }
+
+        let actualSize = (try? FileManager.default.attributesOfItem(atPath: destURL.path)[.size] as? Int64) ?? fileSize
+
+        let entry = HistoryEntry(
+            id: UUID(),
+            timestamp: Date(),
+            filename: filename,
+            appName: appName,
+            windowTitle: windowTitle,
+            fileSize: actualSize,
+            mediaType: .video,
+            duration: duration
+        )
+
+        entries.insert(entry, at: 0)
+        enforceLimit()
+        saveManifest()
+        return entry
+    }
+
     func delete(entry: HistoryEntry) {
         try? FileManager.default.removeItem(at: fileURL(for: entry))
         entries.removeAll { $0.id == entry.id }
@@ -82,16 +125,26 @@ final class HistoryStore: ObservableObject {
     }
 
     func copyToClipboard(entry: HistoryEntry) -> Bool {
-        guard let data = try? Data(contentsOf: fileURL(for: entry)) else { return false }
+        let url = fileURL(for: entry)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setData(data, forType: .png)
-        return true
+
+        if entry.mediaType == .video {
+            return pasteboard.writeObjects([url as NSURL])
+        } else {
+            guard let data = try? Data(contentsOf: url) else { return false }
+            pasteboard.setData(data, forType: .png)
+            return true
+        }
     }
 
     func saveToFile(entry: HistoryEntry) {
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.png]
+        if entry.mediaType == .video {
+            panel.allowedContentTypes = [.mpeg4Movie]
+        } else {
+            panel.allowedContentTypes = [.png]
+        }
         panel.nameFieldStringValue = suggestedFilename(for: entry)
         panel.canCreateDirectories = true
 
@@ -135,7 +188,8 @@ final class HistoryStore: ObservableObject {
     func suggestedFilename(for entry: HistoryEntry) -> String {
         let appName = entry.displayName.replacingOccurrences(of: "/", with: "-")
         let dateString = Self.saveFileDateFormatter.string(from: entry.timestamp)
-        return "Locus - \(appName) - \(dateString).png"
+        let ext = entry.mediaType == .video ? "mp4" : "png"
+        return "Locus - \(appName) - \(dateString).\(ext)"
     }
 
     func enforceLimit() {

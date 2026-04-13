@@ -1,3 +1,5 @@
+import AVFoundation
+import AVKit
 import SwiftUI
 
 struct HistoryView: View {
@@ -103,6 +105,7 @@ private struct HistoryDetailView: View {
     let onSelect: (Int) -> Void
     let onDismiss: () -> Void
     @State private var fullImage: NSImage?
+    @State private var videoPlayer: AVPlayer?
 
     private var entry: HistoryEntry {
         entries[currentIndex]
@@ -138,7 +141,7 @@ private struct HistoryDetailView: View {
                 }
 
                 VStack(spacing: 16) {
-                    imageView
+                    mediaView
                         .frame(
                             maxWidth: geo.size.width - 120,
                             maxHeight: geo.size.height - 120
@@ -154,6 +157,12 @@ private struct HistoryDetailView: View {
                             .foregroundColor(.secondary)
                         Text(timeAgo(entry.timestamp))
                             .foregroundColor(.secondary)
+                        if entry.mediaType == .video, let duration = entry.duration {
+                            Text("\u{2014}")
+                                .foregroundColor(.secondary)
+                            Text(formatDuration(duration))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .font(.caption)
 
@@ -166,6 +175,16 @@ private struct HistoryDetailView: View {
                             Label("Copy", systemImage: "doc.on.clipboard")
                         }
                         .buttonStyle(.borderedProminent)
+
+                        if entry.mediaType == .video {
+                            Button {
+                                onDismiss()
+                                ExportView.present(entry: entry)
+                            } label: {
+                                Label("Export As\u{2026}", systemImage: "square.and.arrow.up")
+                            }
+                            .buttonStyle(.bordered)
+                        }
 
                         Button {
                             HistoryStore.shared.saveToFile(entry: entry)
@@ -186,10 +205,12 @@ private struct HistoryDetailView: View {
                 .padding(32)
             }
         }
-        .onAppear { loadFullImage() }
+        .onAppear { loadMedia() }
         .onChange(of: currentIndex) { _, _ in
             fullImage = nil
-            loadFullImage()
+            videoPlayer?.pause()
+            videoPlayer = nil
+            loadMedia()
         }
         .onExitCommand { onDismiss() }
         .onKeyPress(.leftArrow) {
@@ -203,8 +224,15 @@ private struct HistoryDetailView: View {
     }
 
     @ViewBuilder
-    private var imageView: some View {
-        if let fullImage {
+    private var mediaView: some View {
+        if entry.mediaType == .video {
+            if let videoPlayer {
+                PlayerView(player: videoPlayer)
+            } else {
+                ProgressView()
+                    .frame(width: 200, height: 150)
+            }
+        } else if let fullImage {
             Image(nsImage: fullImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -226,125 +254,16 @@ private struct HistoryDetailView: View {
         .buttonStyle(.plain)
     }
 
-    private func loadFullImage() {
-        let fileURL = HistoryStore.shared.fileURL(for: entry)
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let image = NSImage(contentsOf: fileURL) else { return }
-            DispatchQueue.main.async { fullImage = image }
-        }
-    }
-}
-
-// MARK: - Grid Cell
-
-private struct HistoryCell: View {
-    let entry: HistoryEntry
-    let onSelect: () -> Void
-    @State private var isHovered = false
-    @State private var thumbnail: NSImage?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ZStack(alignment: .topTrailing) {
-                thumbnailView
-                    .frame(height: 100)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .contentShape(RoundedRectangle(cornerRadius: 6))
-                    .onTapGesture { onSelect() }
-                    .onDrag { HistoryStore.shared.itemProvider(for: entry) }
-
-                if isHovered {
-                    hoverActions
-                }
-            }
-
-            Text(entry.displayName)
-                .font(.caption)
-                .fontWeight(.medium)
-                .lineLimit(1)
-
-            Text(timeAgo(entry.timestamp))
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.primary.opacity(0.06) : Color.clear)
-        )
-        .onHover { isHovered = $0 }
-        .onAppear { loadThumbnail() }
-    }
-
-    @ViewBuilder
-    private var thumbnailView: some View {
-        if let thumbnail {
-            Image(nsImage: thumbnail)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+    private func loadMedia() {
+        if entry.mediaType == .video {
+            let url = HistoryStore.shared.fileURL(for: entry)
+            videoPlayer = AVPlayer(url: url)
         } else {
-            Rectangle()
-                .fill(Color.primary.opacity(0.05))
-                .overlay {
-                    ProgressView()
-                        .scaleEffect(0.5)
-                }
-        }
-    }
-
-    private var hoverActions: some View {
-        HStack(spacing: 4) {
-            hoverButton(systemImage: "doc.on.clipboard") {
-                if HistoryStore.shared.copyToClipboard(entry: entry) {
-                    Feedback.playSuccessSound()
-                }
-            }
-            hoverButton(systemImage: "square.and.arrow.down") {
-                HistoryStore.shared.saveToFile(entry: entry)
-            }
-            hoverButton(systemImage: "trash") {
-                HistoryStore.shared.delete(entry: entry)
+            let fileURL = HistoryStore.shared.fileURL(for: entry)
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let image = NSImage(contentsOf: fileURL) else { return }
+                DispatchQueue.main.async { fullImage = image }
             }
         }
-        .padding(6)
-    }
-
-    private func hoverButton(systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.caption)
-                .padding(6)
-                .background(.ultraThickMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func loadThumbnail() {
-        let fileURL = HistoryStore.shared.fileURL(for: entry)
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let image = NSImage(contentsOf: fileURL) else { return }
-            let thumbSize = NSSize(width: 320, height: 320)
-            let thumb = NSImage(size: thumbSize, flipped: false) { rect in
-                image.draw(in: rect, from: NSRect(origin: .zero, size: image.size), operation: .copy, fraction: 1.0)
-                return true
-            }
-            DispatchQueue.main.async {
-                thumbnail = thumb
-            }
-        }
-    }
-}
-
-private func timeAgo(_ date: Date) -> String {
-    let seconds = Int(-date.timeIntervalSinceNow)
-    switch seconds {
-    case ..<5: return "just now"
-    case ..<60: return "\(seconds) seconds ago"
-    case ..<120: return "1 minute ago"
-    case ..<3600: return "\(seconds / 60) minutes ago"
-    case ..<7200: return "1 hour ago"
-    case ..<86400: return "\(seconds / 3600) hours ago"
-    case ..<172_800: return "yesterday"
-    default: return "\(seconds / 86400) days ago"
     }
 }

@@ -8,6 +8,8 @@ struct HotkeyBinding: Codable, Equatable {
     static let defaultCaptureWindow = HotkeyBinding(keyCode: 18, modifierFlags: 1_179_648, displayKey: "1")
     static let defaultCaptureFullScreen = HotkeyBinding(keyCode: 19, modifierFlags: 1_179_648, displayKey: "2")
     static let defaultOpenHistory = HotkeyBinding(keyCode: 4, modifierFlags: 1_179_648, displayKey: "H")
+    static let defaultRecordWindow = HotkeyBinding(keyCode: 18, modifierFlags: 1_572_864, displayKey: "1")
+    static let defaultRecordFullScreen = HotkeyBinding(keyCode: 19, modifierFlags: 1_572_864, displayKey: "2")
 
     var displayString: String {
         var parts: [String] = []
